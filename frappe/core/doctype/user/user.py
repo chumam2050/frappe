@@ -39,6 +39,7 @@ from frappe.utils.password import check_password, get_password_reset_limit
 from frappe.utils.password import update_password as _update_password
 from frappe.utils.user import get_system_managers
 from frappe.website.utils import get_home_page, is_signup_disabled
+from frappe.www.login import sanitize_redirect
 
 desk_properties = (
 	"search_bar",
@@ -47,6 +48,7 @@ desk_properties = (
 	"bulk_actions",
 	"view_switcher",
 	"form_sidebar",
+	"form_navigation_buttons",
 	"timeline",
 	"dashboard",
 )
@@ -83,7 +85,7 @@ class User(Document):
 		default_app: DF.Literal[None]
 		default_workspace: DF.Link | None
 		defaults: DF.Table[DefaultValue]
-		desk_theme: DF.Literal["Automatic", "Light", "Dark"]
+		desk_theme: DF.Literal["Light", "Dark", "Automatic"]
 		document_follow_frequency: DF.Literal["Hourly", "Daily", "Weekly"]
 		document_follow_notify: DF.Check
 		email: DF.Data
@@ -95,6 +97,7 @@ class User(Document):
 		follow_created_documents: DF.Check
 		follow_liked_documents: DF.Check
 		follow_shared_documents: DF.Check
+		form_navigation_buttons: DF.Check
 		form_sidebar: DF.Check
 		full_name: DF.Data | None
 		gender: DF.Link | None
@@ -554,7 +557,7 @@ class User(Document):
 		if custom_template:
 			from frappe.email.doctype.email_template.email_template import get_email_template
 
-			email_template = get_email_template(custom_template, args)
+			email_template = get_email_template(custom_template, args, sender=sender)
 			subject = email_template.get("subject")
 			content = email_template.get("message")
 
@@ -1115,7 +1118,7 @@ def sign_up(email: str, full_name: str, redirect_to: str) -> tuple[int, str]:
 			user.add_roles(default_role)
 
 		if redirect_to:
-			frappe.cache.hset("redirect_after_login", user.name, redirect_to)
+			frappe.cache.hset("redirect_after_login", user.name, sanitize_redirect(redirect_to))
 
 		if user.flags.email_sent:
 			return 1, _("Please check your email for verification")
