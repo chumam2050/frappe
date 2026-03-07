@@ -240,7 +240,14 @@ class PushNotification:
 		if not self.is_enabled():
 			raise Exception("Push Notification Relay is not enabled")
 
-		relay_server_endpoint = frappe.conf.get("push_relay_server_url")
+		# push_relay_server_backend overrides push_relay_server_url for server-side calls.
+		# Use this in Docker/production to point directly to the internal service
+		# (e.g. http://frontend:8080) and avoid routing through the public reverse proxy,
+		# which can cause worker deadlocks or recursive loops.
+		# push_relay_server_url is still used by the browser JS client (boot session).
+		relay_server_endpoint = frappe.conf.get("push_relay_server_backend") or frappe.conf.get(
+			"push_relay_server_url"
+		)
 		if use_authentication:
 			api_key, api_secret = self._get_credential()
 			client = FrappeClient(relay_server_endpoint, api_key=api_key, api_secret=api_secret)
