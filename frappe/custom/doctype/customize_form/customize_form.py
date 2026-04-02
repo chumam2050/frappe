@@ -727,6 +727,7 @@ doctype_properties = {
 	"sort_field": "Data",
 	"sort_order": "Data",
 	"default_print_format": "Data",
+	"hide_toolbar": "Check",
 	"allow_copy": "Check",
 	"istable": "Check",
 	"quick_entry": "Check",
@@ -809,6 +810,7 @@ docfield_properties = {
 	"placeholder": "Data",
 	"button_color": "Select",
 	"mask": "Check",
+	"set_only_once": "Check",
 }
 
 doctype_link_properties = {
