@@ -256,6 +256,11 @@ frappe.ui.Sidebar = class Sidebar {
 			this.onboarding_widget = {};
 		}
 
+		if (!workspace_title || typeof workspace_title !== "string") {
+			console.warn("Skipping sidebar setup due to invalid workspace title", workspace_title);
+			return;
+		}
+
 		$(document).trigger("sidebar_setup", { sidebar: this });
 		this.sidebar_title = workspace_title;
 		this.check_for_private_workspace(workspace_title);
@@ -698,11 +703,15 @@ frappe.ui.Sidebar = class Sidebar {
 			if (sidebars.length == 1) {
 				frappe.app.sidebar.setup(sidebars[0]);
 			} else if (sidebars.length > 1) {
-				let sidebar = this.get_workspace_for_module(module);
-				if (sidebars.includes(this.get_workspace_for_module(module))) {
-					frappe.app.sidebar.setup(sidebar);
+				if (module) {
+					let sidebar = this.get_workspace_for_module(module);
+					if (sidebars.includes(this.get_workspace_for_module(module))) {
+						frappe.app.sidebar.setup(sidebar);
+					} else {
+						frappe.app.sidebar.setup(module);
+					}
 				} else {
-					frappe.app.sidebar.setup(module);
+					frappe.app.sidebar.setup(sidebars[0]);
 				}
 			} else if (module) {
 				this.show_sidebar_for_module(module);
@@ -716,9 +725,11 @@ frappe.ui.Sidebar = class Sidebar {
 	filter_sidebars_from_app(sidebars, app) {
 		let filter_sidebars = [];
 		sidebars.forEach((sidebar) => {
+			let sidebar_item = frappe.boot.workspace_sidebar_item[sidebar.toLowerCase()];
 			if (
 				!filter_sidebars.includes(sidebar) &&
-				frappe.boot.workspace_sidebar_item[sidebar.toLowerCase()].app === app
+				sidebar_item &&
+				sidebar_item.app === app
 			) {
 				filter_sidebars.push(sidebar);
 			}
